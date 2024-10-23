@@ -1,82 +1,80 @@
--- Mengakses Daftar Produk
-DELIMITER //
-CREATE PROCEDURE getProducts() BEGIN
+-- Menambakan Index
+-- Indeks pada tabel produk untuk kolom name
+CREATE INDEX idx_product_name ON products(name);
+
+-- Indeks pada tabel pengguna untuk kolom fullname
+CREATE INDEX idx_user_fullname ON users(fullname);
+
+-- Indeks pada tabel kategori untuk kolom name
+CREATE INDEX idx_category_name ON categories(name);
+
+-- Indeks pada tabel admin untuk kolom fullname
+CREATE INDEX idx_admin_fullname ON users(fullname) WHERE role = 'admin';
+
+
+-- View Products and Category
+CREATE VIEW product_with_category AS
 SELECT
     p.id,
     p.name,
     p.description,
     p.price,
     p.unit_weight,
+    p.stock,
     c.name AS category
 FROM
     products p
-    JOIN categories c ON p.category_id = c.id;
+JOIN
+    categories c ON p.category_id = c.id;
+
+
+-- Mengakses Daftar Produk
+DELIMITER //
+CREATE PROCEDURE getProducts() BEGIN
+    SELECT * FROM product_with_category;
 END //
 DELIMITER ;
 
 -- Detail Produk
 DELIMITER //
 CREATE PROCEDURE getProductById(IN id INT) BEGIN
-SELECT
-    p.id,
-    p.name,
-    p.description,
-    p.price,
-    p.unit_weight,
-    c.name AS category
-FROM
-    products p
-    JOIN categories c ON p.category_id = c.id
-WHERE
-    p.id = id;
+    SELECT * FROM product_with_category WHERE id = id;
 END //
 DELIMITER ;
 
 -- Mencari Produk berdasarkan Nama
 DELIMITER //
 CREATE PROCEDURE getProductByName(IN name VARCHAR(255)) BEGIN
-SELECT
-    p.id,
-    p.name,
-    p.description,
-    p.price,
-    p.unit_weight,
-    c.name AS category
-FROM
-    products p
-    JOIN categories c ON p.category_id = c.id
-WHERE
-    p.name LIKE CONCAT('%', name, '%');
+    SELECT * FROM product_with_category 
+    WHERE name LIKE CONCAT('%', name, '%');
 END //
 DELIMITER ;
 
 -- CRUD User
 
--- Lihat Daftar User
-DELIMITER //
-CREATE PROCEDURE getUsers() BEGIN
+-- View table user
+CREATE VIEW user_view AS
 SELECT
+    id,
     fullname,
     role,
     email,
     phone
 FROM
     users;
+
+-- Lihat Daftar User
+DELIMITER //
+CREATE PROCEDURE getUsers() BEGIN
+    SELECT * FROM user_view;
 END //
 DELIMITER ;
 
+
 -- Lihat Detail User
-DELIMETER //
+DELIMITER //
 CREATE PROCEDURE getUserById(IN id INT) BEGIN
-SELECT
-    fullname,
-    role,
-    email,
-    phone
-FROM
-    users
-WHERE
-    id = id;
+    SELECT * FROM user_view WHERE id = id;
 END //
 DELIMITER ;
 
@@ -84,32 +82,19 @@ DELIMITER ;
 DELIMITER //
 CREATE PROCEDURE getUserByName(IN name VARCHAR(100)) 
 BEGIN
-    SELECT
-        fullname,
-        role,
-        email,
-        phone
-    FROM
-        users
-    WHERE
-        fullname LIKE CONCAT('%', name, '%'); 
+    SELECT * FROM user_view WHERE fullname LIKE CONCAT('%', name, '%');
 END //
 DELIMITER ;
 
+
 -- Cari User Berdasarkan Email
 DELIMITER //
-CREATE PROCEDURE getUserByEmail(IN email VARCHAR(100)) BEGIN
-SELECT
-   fullname,
-   role,
-   email,
-   phone
-FROM
-    users
-WHERE
-    email = email;
+CREATE PROCEDURE getUserByEmail(IN email VARCHAR(100)) 
+BEGIN
+    SELECT * FROM user_view WHERE email = email;
 END //
 DELIMITER ;
+
 
 -- Tambah User
 DELIMITER //
@@ -157,62 +142,32 @@ WHERE
 END //
 DELIMITER ;
 
+
 -- CRUD Product
 
 -- Lihat Daftar Product
 DELIMITER //
 CREATE PROCEDURE getProducts() BEGIN
-SELECT
-    p.id,
-    p.name,
-    p.description,
-    p.stock,
-    p.price,
-    p.unit_weight,
-    c.name AS category
-FROM
-    products p
-    JOIN categories c ON p.category_id = c.id;
+    SELECT * FROM product_with_category;
 END //
 DELIMITER ;
+
 
 -- Lihat Detail Product
 DELIMITER //
 CREATE PROCEDURE getProductById(IN id INT) BEGIN
-SELECT
-    p.id,
-    p.name,
-    p.description,
-    p.price,
-    p.unit_weight,
-    p.stock,
-    c.name AS category
-FROM
-    products p
-    JOIN categories c ON p.category_id = c.id
-WHERE
-    p.id = id;
+    SELECT * FROM product_with_category WHERE id = id;
 END //
 DELIMITER ;
+
 
 -- Cari Product
 DELIMITER //
 CREATE PROCEDURE getProductByName(IN name VARCHAR(255)) BEGIN
-SELECT
-    p.id,
-    p.name,
-    p.description,
-    p.price,
-    p.unit_weight,
-    p.stock,
-    c.name AS category
-FROM
-    products p
-    JOIN categories c ON p.category_id = c.id
-WHERE
-    p.name LIKE CONCAT('%', name, '%');
+    SELECT * FROM product_with_category WHERE name LIKE CONCAT('%', name, '%');
 END //
 DELIMITER ;
+
 
 -- Tambah Product
 DELIMITER //
@@ -346,9 +301,9 @@ WHERE
 END //
 DELIMITER ;
 
--- Daftar Riwayat Transaksi
-DELIMITER //
-CREATE PROCEDURE getTransactions() BEGIN
+
+-- view transaction, user and useraddress
+CREATE VIEW transaction_with_user AS
 SELECT
     t.id,
     t.user_id,
@@ -364,16 +319,24 @@ SELECT
     ua.zipcode
 FROM
     transactions t
-    JOIN users u ON t.user_id = u.id
-    JOIN user_addresses ua ON t.useraddress_id = ua.id;
+JOIN
+    users u ON t.user_id = u.id
+JOIN
+    user_addresses ua ON t.user_address_id = ua.id;
+
+
+-- Daftar Riwayat Transaksi
+DELIMITER //
+CREATE PROCEDURE getTransactions() BEGIN
+    SELECT * FROM transaction_with_user;
 END //
-DELIMITER ; 
+DELIMITER ;
+
 
 -- Lihat Detail Transaksi
-DELIMITER //
-CREATE PROCEDURE getTransactionById(IN id INT) BEGIN
+CREATE VIEW transaction_with_details AS
 SELECT
-   t.id,
+    t.id AS transaction_id,
     t.user_id,
     t.user_address_id,
     t.total_price,
@@ -383,16 +346,32 @@ SELECT
     t.status,
     t.created_at,
     u.username,
-    ua.addres
-    ua.zipcode
+    ua.address,
+    ua.zipcode,
+    td.product_id,
+    td.amount,
+    td.actual_price,
+    p.name AS product_name,
+    p.description AS product_description
 FROM
     transactions t
-    JOIN users u ON t.user_id = u.id
-    JOIN useraddresses ua ON t.useraddress_id = ua.id
-WHERE
-    t.id = id;
+JOIN
+    users u ON t.user_id = u.id
+JOIN
+    user_addresses ua ON t.user_address_id = ua.id
+JOIN
+    transaction_details td ON td.transaction_id = t.id
+JOIN
+    products p ON td.product_id = p.id;
+
+DELIMITER //
+CREATE PROCEDURE getTransactionById(IN id INT) BEGIN
+    SELECT * FROM transaction_with_details WHERE transaction_id = id;
 END //
 DELIMITER ;
+
+
+
 
 -- Mengubah Status Transaksi
 DELIMITER //
@@ -425,10 +404,7 @@ END //
 DELIMITER ;
 
 -- CRUD Akun Admin
-
--- Lihat Daftar Admin
-DELIMITER //
-CREATE PROCEDURE getAdmins() BEGIN
+CREATE VIEW view_admins AS
 SELECT
     id,
     fullname,
@@ -437,36 +413,27 @@ FROM
     users
 WHERE
     role = 'admin';
+
+-- Lihat Daftar Admin 
+DELIMITER //
+CREATE PROCEDURE getAdmins() BEGIN
+    SELECT * FROM view_admins;
 END //
 DELIMITER ;
 
--- Detauk Admin
+
+-- Detail Admin
 DELIMITER //
 CREATE PROCEDURE getAdminById(IN id INT) BEGIN
-SELECT
-    id,
-    fullname,
-    email
-FROM
-    users
-WHERE
-    id = id
-    AND role = 'admin';
+    SELECT * FROM view_admins where id = id;
 END //
 DELIMITER ;
+
 
 -- Cari Admin
 DELIMITER //
-CREATE PROCEDURE getAdminByName(IN name VARCHAR(255)) BEGIN
-SELECT
-    id,
-    fullname,
-    email
-FROM
-    users
-WHERE
-    fullname LIKE CONCAT('%', name, '%')
-    AND role = 'admin';
+CREATE PROCEDURE getAdminByName(IN id INT) BEGIN
+    SELECT * FROM view_admins where fullname LIKE CONCAT('%', name, '%');
 END //
 DELIMITER ;
 
@@ -527,24 +494,27 @@ DELIMITER ;
 -- Module Keranjang
 
 -- Lihat Keranjang
+CREATE VIEW view_cart_products AS
+SELECT 
+    c.id AS cart_id,
+    p.id AS product_id,
+    p.name AS product_name,
+    c.quantity,
+    p.price,
+    (c.quantity * p.price) AS total_price
+FROM 
+    carts c
+JOIN 
+    products p ON c.product_id = p.id;
+
+
 DELIMITER //
 CREATE PROCEDURE getCartProducts(IN user_id INT) 
 BEGIN
-    SELECT 
-        c.id AS cart_id,
-        p.id AS product_id,
-        p.name AS product_name,
-        c.quantity,
-        p.price,
-        (c.quantity * p.price) AS total_price
-    FROM 
-        carts c
-    JOIN 
-        products p ON c.product_id = p.id
-    WHERE 
-        c.user_id = user_id;
+    SELECT * FROM view_cart_products WHERE user_id = user_id;
 END //
 DELIMITER ;
+
 
 -- Menambahkan Product ke Keranjang
 DELIMITER //

@@ -51,6 +51,8 @@ END //
 DELIMITER ;
 
 -- CRUD User
+
+-- Lihat Daftar User
 DELIMITER //
 CREATE PROCEDURE getUsers() BEGIN
 SELECT
@@ -63,6 +65,7 @@ FROM
 END //
 DELIMITER ;
 
+-- Lihat Detail User
 DELIMETER //
 CREATE PROCEDURE getUserById(IN id INT) BEGIN
 SELECT
@@ -77,6 +80,7 @@ WHERE
 END //
 DELIMITER ;
 
+-- Cari User
 DELIMITER //
 CREATE PROCEDURE getUserByName(IN name VARCHAR(100)) 
 BEGIN
@@ -92,7 +96,7 @@ BEGIN
 END //
 DELIMITER ;
 
-
+-- Cari User Berdasarkan Email
 DELIMITER //
 CREATE PROCEDURE getUserByEmail(IN email VARCHAR(100)) BEGIN
 SELECT
@@ -107,6 +111,7 @@ WHERE
 END //
 DELIMITER ;
 
+-- Tambah User
 DELIMITER //
 CREATE PROCEDURE createUser(
     IN fullname VARCHAR(255),
@@ -121,6 +126,7 @@ VALUES
 END //
 DELIMITER ;
 
+-- Update User
 DELIMITER //
 CREATE PROCEDURE updateUser(
     IN id INT,
@@ -141,6 +147,7 @@ WHERE
 END //
 DELIMITER ;
 
+-- Hapus User
 DELIMITER //
 CREATE PROCEDURE deleteUser(IN id INT) BEGIN
 DELETE FROM
@@ -151,6 +158,8 @@ END //
 DELIMITER ;
 
 -- CRUD Product
+
+-- Lihat Daftar Product
 DELIMITER //
 CREATE PROCEDURE getProducts() BEGIN
 SELECT
@@ -167,6 +176,7 @@ FROM
 END //
 DELIMITER ;
 
+-- Lihat Detail Product
 DELIMITER //
 CREATE PROCEDURE getProductById(IN id INT) BEGIN
 SELECT
@@ -185,6 +195,7 @@ WHERE
 END //
 DELIMITER ;
 
+-- Cari Product
 DELIMITER //
 CREATE PROCEDURE getProductByName(IN name VARCHAR(255)) BEGIN
 SELECT
@@ -203,6 +214,7 @@ WHERE
 END //
 DELIMITER ;
 
+-- Tambah Product
 DELIMITER //
 CREATE PROCEDURE createProduct(
     IN name VARCHAR(255),
@@ -233,6 +245,7 @@ VALUES
 END //
 DELIMITER ;
 
+-- Update Product
 DELIMITER //
 CREATE PROCEDURE updateProduct(
     IN id INT,
@@ -257,6 +270,7 @@ WHERE
 END //
 DELIMITER ;
 
+-- Hapus Product
 DELIMITER //
 CREATE PROCEDURE deleteProduct(IN id INT) BEGIN
 DELETE FROM
@@ -267,6 +281,8 @@ END //
 DELIMITER ;
 
 -- CRUD Category
+
+-- Lihat Daftar Category
 DELIMITER //
 CREATE PROCEDURE getCategories() BEGIN
 SELECT
@@ -277,18 +293,7 @@ FROM
 END //
 DELIMITER ;
 
-DELIMITER //
-CREATE PROCEDURE getCategoryById(IN id INT) BEGIN
-SELECT
-    id,
-    name
-FROM
-    categories
-WHERE
-    id = id;
-END //
-DELIMITER ;
-
+--  Cari Kategori
 DELIMITER //
 CREATE PROCEDURE getCategoryByName(IN name VARCHAR(100)) BEGIN
 SELECT
@@ -301,6 +306,7 @@ WHERE
 END //
 DELIMITER ;
 
+-- Tambah Kategori
 DELIMITER //
 CREATE PROCEDURE createCategory(
     IN name VARCHAR(100),
@@ -313,6 +319,7 @@ VALUES
 END //
 DELIMITER ;
 
+-- Update Kategori
 DELIMITER //
 CREATE PROCEDURE updateCategory(
     IN id INT,
@@ -329,6 +336,7 @@ WHERE
 END //
 DELIMITER ;
 
+-- Hapus Kategori
 DELIMITER //
 CREATE PROCEDURE deleteCategory(IN id INT) BEGIN
 DELETE FROM
@@ -338,7 +346,7 @@ WHERE
 END //
 DELIMITER ;
 
--- Mengakses Riwayat Transaksi
+-- Daftar Riwayat Transaksi
 DELIMITER //
 CREATE PROCEDURE getTransactions() BEGIN
 SELECT
@@ -361,6 +369,7 @@ FROM
 END //
 DELIMITER ; 
 
+-- Lihat Detail Transaksi
 DELIMITER //
 CREATE PROCEDURE getTransactionById(IN id INT) BEGIN
 SELECT
@@ -416,6 +425,8 @@ END //
 DELIMITER ;
 
 -- CRUD Akun Admin
+
+-- Lihat Daftar Admin
 DELIMITER //
 CREATE PROCEDURE getAdmins() BEGIN
 SELECT
@@ -429,6 +440,7 @@ WHERE
 END //
 DELIMITER ;
 
+-- Detauk Admin
 DELIMITER //
 CREATE PROCEDURE getAdminById(IN id INT) BEGIN
 SELECT
@@ -443,6 +455,7 @@ WHERE
 END //
 DELIMITER ;
 
+-- Cari Admin
 DELIMITER //
 CREATE PROCEDURE getAdminByName(IN name VARCHAR(255)) BEGIN
 SELECT
@@ -457,6 +470,8 @@ WHERE
 END //
 DELIMITER ;
 
+
+-- Tambah Admin
 DELIMITER //
 CREATE PROCEDURE createAdmin(
     IN fullname VARCHAR(255),
@@ -477,10 +492,10 @@ VALUES
         password,
         'admin'
     );  
-
 END //
 DELIMITER ;
 
+-- Update Admin
 DELIMITER //
 CREATE PROCEDURE updateAdmin(
     IN id INT,
@@ -498,6 +513,7 @@ WHERE
 END //
 DELIMITER ;
 
+-- Hapus Admin
 DELIMITER //
 CREATE PROCEDURE deleteAdmin(IN id INT) BEGIN
 DELETE FROM
@@ -508,7 +524,9 @@ WHERE
 END //
 DELIMITER ;
 
-// mengatur keranjang
+-- Module Keranjang
+
+-- Lihat Keranjang
 DELIMITER //
 CREATE PROCEDURE getCartProducts(IN user_id INT) 
 BEGIN
@@ -528,6 +546,7 @@ BEGIN
 END //
 DELIMITER ;
 
+-- Menambahkan Product ke Keranjang
 DELIMITER //
 CREATE PROCEDURE addToCart(
     IN user_id INT,
@@ -541,6 +560,7 @@ BEGIN
 END //
 DELIMITER ;
 
+-- Update Jumlah Product di Keranjang
 DELIMITER //
 CREATE PROCEDURE updateProductAmountInCart(
     IN cart_id INT,
@@ -553,6 +573,7 @@ BEGIN
 END //
 DELIMITER ;
 
+-- Menghapus Product dari Keranjang
 DELIMITER //
 CREATE PROCEDURE removeProductFromCart(
     IN cart_id INT
@@ -564,6 +585,8 @@ END //
 DELIMITER ;
 
 -- Proses Checkout
+
+-- Menghitung Total Harga
 DELIMITER //
 CREATE FUNCTION calculateTotalPrice(p_user_id INT)
 RETURNS DECIMAL(10,2)
@@ -581,6 +604,7 @@ BEGIN
 END //
 DELIMITER ;
 
+-- Menghitung Total Berat
 DELIMITER //
 CREATE FUNCTION calculateTotalWeight(p_user_id INT)
 RETURNS DECIMAL(10,2)
@@ -588,7 +612,7 @@ DETERMINISTIC
 BEGIN
     DECLARE v_total_weight DECIMAL(10,2);
 
-    SELECT SUM(p.unit_weight * c.amount)  -- Menghitung total berat
+    SELECT SUM(p.unit_weight * c.amount)  
     INTO v_total_weight
     FROM cart c
     JOIN products p ON p.id = c.product_id
@@ -598,6 +622,7 @@ BEGIN
 END //
 DELIMITER ;
 
+-- Menghitung Biaya Pengiriman
 DELIMITER //
 CREATE FUNCTION calculateShippingCost(p_user_id INT)
 RETURNS DECIMAL(10,2)
@@ -614,7 +639,7 @@ BEGIN
 END //
 DELIMITER ;
 
-
+-- Proses Checkout
 DELIMITER //
 CREATE PROCEDURE processCheckout(
     IN p_user_id INT,
@@ -710,13 +735,13 @@ BEGIN
 
     CLOSE cart_cursor;
 
-    COMMIT;
+                                                                                                                                                                    ;
 
     SELECT v_code AS transaction_code;
 END //
 DELIMITER ;
 
-
+-- Trigger for updating product stock after transaction (decrease stock after a successful transaction)
 DELIMITER //
 CREATE TRIGGER after_transaction_detail_insert
 AFTER INSERT ON transaction_details
@@ -728,7 +753,7 @@ BEGIN
 END //
 DELIMITER ;
 
--- Trigger for delete product in cart after transaction
+-- Trigger for returning product stock when an item is deleted from the cart (before transaction)
 DELIMITER //
 CREATE TRIGGER after_cart_delete
 AFTER DELETE ON cart
@@ -739,7 +764,6 @@ BEGIN
     WHERE id = OLD.product_id;
 END //
 DELIMITER ;
-
 
 -- Melihat Riwayat Checkout
 DELIMITER //
@@ -769,7 +793,7 @@ BEGIN
 END //
 DELIMITER ;
 
-
+-- Melihat Detail Transaksi
 DELIMITER //
 CREATE PROCEDURE getTransactionDetails(IN p_transaction_id INT)
 BEGIN
@@ -806,9 +830,5 @@ BEGIN
         accepted_at = NOW()
     WHERE 
         id = p_transaction_id;
-
-    IF ROW_COUNT() = 0 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Transaction not found or already accepted.';
-    END IF;
 END //
 DELIMITER ;

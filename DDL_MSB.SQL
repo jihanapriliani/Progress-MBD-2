@@ -21,7 +21,7 @@ CREATE TABLE products (
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
 );
 
--- table productstocks
+-- table product_logs
 CREATE TABLE stock_logs (
     id INT PRIMARY KEY AUTO_INCREMENT,
     product_id INT NOT NULL,
@@ -116,7 +116,7 @@ CREATE TABLE transactions (
     FOREIGN KEY (user_address_id) REFERENCES user_addresses(id) ON DELETE CASCADE
 );
 
--- table transactiondetails 
+-- table transaction_details 
 CREATE TABLE transactiondetails (
     id INT PRIMARY KEY AUTO_INCREMENT,
     transaction_id INT NOT NULL,

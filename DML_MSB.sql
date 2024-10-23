@@ -588,19 +588,19 @@ DELIMITER ;
 
 -- Menghitung Total Harga
 DELIMITER //
-CREATE FUNCTION calculateTotalPrice(p_user_id INT)
+CREATE FUNCTION calculateTotalPrice(user_id INT)
 RETURNS DECIMAL(10,2)
 DETERMINISTIC
 BEGIN
-    DECLARE v_total_price DECIMAL(10,2);
+    DECLARE total_price DECIMAL(10,2);
 
     SELECT SUM(p.price * c.amount)
-    INTO v_total_price
-    FROM cart c
+    INTO total_price
+    FROM carts c
     JOIN products p ON p.id = c.product_id
-    WHERE c.user_id = p_user_id;
+    WHERE c.user_id = user_id;
 
-    RETURN v_total_price;
+    RETURN total_price;
 END //
 DELIMITER ;
 
@@ -610,15 +610,15 @@ CREATE FUNCTION calculateTotalWeight(p_user_id INT)
 RETURNS DECIMAL(10,2)
 DETERMINISTIC
 BEGIN
-    DECLARE v_total_weight DECIMAL(10,2);
+    DECLARE total_weight DECIMAL(10,2);
 
     SELECT SUM(p.unit_weight * c.amount)  
-    INTO v_total_weight
-    FROM cart c
+    INTO total_weight
+    FROM carts c
     JOIN products p ON p.id = c.product_id
     WHERE c.user_id = p_user_id;
 
-    RETURN v_total_weight;
+    RETURN total_weight;
 END //
 DELIMITER ;
 
@@ -628,14 +628,14 @@ CREATE FUNCTION calculateShippingCost(p_user_id INT)
 RETURNS DECIMAL(10,2)
 DETERMINISTIC
 BEGIN
-    DECLARE v_total_weight DECIMAL(10,2);
-    DECLARE v_shipping_cost DECIMAL(10,2);
+    DECLARE total_weight DECIMAL(10,2);
+    DECLARE shipping_cost DECIMAL(10,2);
 
-    SET v_total_weight = calculateTotalWeight(p_user_id);
+    SET total_weight = calculateTotalWeight(p_user_id);
 
-    SET v_shipping_cost = v_total_weight * 5000; 
+    SET shipping_cost = total_weight * 10000; 
 
-    RETURN v_shipping_cost;
+    RETURN shipping_cost;
 END //
 DELIMITER ;
 
@@ -734,9 +734,7 @@ BEGIN
     END LOOP;
 
     CLOSE cart_cursor;
-
-                                                                                                                                                                    ;
-
+                                                                                                   
     SELECT v_code AS transaction_code;
 END //
 DELIMITER ;
@@ -765,29 +763,53 @@ BEGIN
 END //
 DELIMITER ;
 
--- Melihat Riwayat Checkout
+-- Trigger for updating product stock after transaction (decrease stock after a successful transaction)
 DELIMITER //
-CREATE PROCEDURE getUserTransactions(IN p_user_id INT)
+CREATE TRIGGER after_transaction_detail_insert
+AFTER INSERT ON transaction_details
+FOR EACH ROW
+BEGIN
+    -- Update the product stock
+    UPDATE products
+    SET stock = stock - NEW.amount
+    WHERE id = NEW.product_id;
+
+    -- Insert a log into stock_logs table to record the stock change
+    INSERT INTO stock_logs (product_id, qty, last_stock, current_stock, description)
+    VALUES (
+        NEW.product_id,               -- product_id
+        NEW.amount,                   -- qty (amount reduced in transaction)
+        (SELECT stock + NEW.amount     -- last_stock (before deduction)
+         FROM products WHERE id = NEW.product_id), 
+        (SELECT stock                 -- current_stock (after deduction)
+         FROM products WHERE id = NEW.product_id),
+        CONCAT('Stock reduced by ', NEW.amount, ' units due to transaction ID ', NEW.transaction_id) -- description
+    );
+END //
+DELIMITER ;
+
+-- Melihat Daftar Riwayat Transasksi
+DELIMITER //
+CREATE PROCEDURE getUserTransactions(IN user_id INT)
 BEGIN
     SELECT
         t.id,
         t.user_id,
-        t.user_address_id,
+        u.fullname AS username,
         t.total_price,
         t.total_weight,
         t.shipping_cost,
         t.delivery_code,
         t.status,
         t.created_at,
-        u.fullname AS username,
+        t.user_address_id,
         ua.address,
-        ua.zipcode
     FROM
         transactions t
         JOIN users u ON t.user_id = u.id
         JOIN user_address ua ON t.user_address_id = ua.id
     WHERE
-        t.user_id = p_user_id
+        t.user_id = user_id
     ORDER BY
         t.created_at DESC;
 END //
@@ -795,7 +817,7 @@ DELIMITER ;
 
 -- Melihat Detail Transaksi
 DELIMITER //
-CREATE PROCEDURE getTransactionDetails(IN p_transaction_id INT)
+CREATE PROCEDURE getTransactionDetails(IN transaction_id INT)
 BEGIN
     SELECT
         td.id AS transaction_detail_id,
@@ -813,7 +835,7 @@ BEGIN
         JOIN products p ON td.product_id = p.id
         JOIN transactions t ON td.transaction_id = t.id
     WHERE
-        td.transaction_id = p_transaction_id;
+        td.transaction_id = transaction_id;
 END //
 DELIMITER ;
 

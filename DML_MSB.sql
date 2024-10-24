@@ -747,13 +747,13 @@ BEGIN
     -- Insert a log into stock_logs table to record the stock change
     INSERT INTO stock_logs (product_id, qty, last_stock, current_stock, description)
     VALUES (
-        NEW.product_id,               -- product_id
-        NEW.amount,                   -- qty (amount reduced in transaction)
-        (SELECT stock + NEW.amount     -- last_stock (before deduction)
+        NEW.product_id,              
+        NEW.amount,                   
+        (SELECT stock + NEW.amount     
          FROM products WHERE id = NEW.product_id), 
-        (SELECT stock                 -- current_stock (after deduction)
+        (SELECT stock               
          FROM products WHERE id = NEW.product_id),
-        CONCAT('Stock reduced by ', NEW.amount, ' units due to transaction ID ', NEW.transaction_id) -- description
+        CONCAT('Stock reduced by ', NEW.amount, ' units due to transaction ID ', NEW.transaction_id) 
     );
 END //
 DELIMITER ;
@@ -822,5 +822,43 @@ BEGIN
         accepted_at = NOW()
     WHERE 
         id = p_transaction_id;
+END //
+DELIMITER ;
+
+
+-- Register User
+DELIMITER //
+CREATE PROCEDURE registerUser(
+    IN fullname VARCHAR(255),
+    IN email VARCHAR(100),
+    IN phone VARCHAR(20),
+    IN password VARCHAR(255)
+)
+BEGIN
+    IF EXISTS (SELECT * FROM users WHERE email = email) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Email already exists';
+    ELSE
+        -- Insert user baru dengan password yang di-hash
+        INSERT INTO users (fullname, email, phone, password, role)
+        VALUES (fullname, email, phone, SHA2(password, 256), 'user');
+    END IF;
+END //
+DELIMITER ;
+
+
+-- Login User
+DELIMITER //
+CREATE PROCEDURE loginUser(
+    IN email VARCHAR(100),
+    IN password VARCHAR(255)
+)
+BEGIN
+    IF EXISTS (SELECT * FROM users WHERE email = email AND password = SHA2(password, 256)) THEN
+        SELECT id, fullname, email, role
+        FROM users
+        WHERE email = email;
+    ELSE
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid email or password';
+    END IF;
 END //
 DELIMITER ;
